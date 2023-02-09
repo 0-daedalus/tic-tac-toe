@@ -59,7 +59,51 @@ let AI = (side) => {
 }
 
 const controller = (() => {
+    
     let _turn;
+    let _board = document.querySelectorAll(".field");
+
+    let _checkBoard = () => {
+        const checkRows = () => {
+            // Check rows
+            for (let i = 0; i < 9; i += 3) {
+                let c = board.state[i] + board.state[i + 1] + board.state[i + 2];
+                if (c === 3 || c === -3) {
+                    return true;
+                }
+            }
+            return false;
+          };
+          const checkColumns = () => {
+            // Check columns
+            for (let i = 0; i < 3; i++) {
+                let c = board.state[i] + board.state[i + 3] + board.state[i + 6];
+              if (c === 3 || c === -3) {
+                return true;
+              }
+            }
+            return false;
+          };
+          const checkDiagonals = () => {
+            // Check diagonals
+            let c = board.state[0] + board.state[4] + board.state[8];
+            let c2 = board.state[2] + board.state[4] + board.state[6]
+            if (c === 3 || c === -3 || c2 === 3 || c2 === -3) {
+              return true;
+            }
+            return false;
+          };
+          return checkRows() || checkColumns() || checkDiagonals();
+    }
+
+    const _die = () => {
+        _board.forEach(e => {
+            let copy = e.cloneNode(true);
+            e.parentNode.appendChild(copy);
+            e.remove();
+        });
+    }
+
     let gameStart = (side, gameMode) => {
         let _player = player(side);
         let _enemy;
@@ -77,20 +121,20 @@ const controller = (() => {
         if(side === "O"){
             _turn = 0;
         }
-        let _board = document.querySelectorAll(".field");
         _board.forEach(e => {
-            e.addEventListener("click", function(){
+            e.addEventListener("click", function mov(){
                 if(_turn === 1){
                     if(_player.makeMove(_player.side, e.id) === 0){
                         _turn = 0;
+                        _checkBoard();
                     }
                 }
                 else{
                     if(_enemy.makeMove(_enemy.side, e.id) === 0){
                         _turn = 1;
-                    }
-                    
+                    } 
                 }
+                if (_checkBoard() === true) _die();
             });
         })
     }
