@@ -1,15 +1,20 @@
-    "use strict"
+"use strict"
+
 const gameSpace = (() =>{
     const board = (() => {
         let state = [];
+        const nullify = () => {
+            state.splice(0, state.length);
+        }
         let _board = document.querySelectorAll(".field");
         console.log(_board);
-        let _erase = () => {
+        let erase = () => {
             let _children = document.querySelectorAll(".field > *");
             _children.forEach(e => e.remove());
         }
         let drawBoard = () => {
-            _erase();
+            erase();
+            let _board = document.querySelectorAll(".field");
             for(let i = 0; i < 9; i++){
                 if(state[i] === -1){
                     _board.forEach(e => {
@@ -31,7 +36,7 @@ const gameSpace = (() =>{
                 }
             }
         }
-        return {state, drawBoard};
+        return {state, drawBoard, erase, nullify};
     })();
 
     let player = (side) => {
@@ -40,11 +45,13 @@ const gameSpace = (() =>{
             if(side === "X" && !board.state[index]){
                 board.state[index] = 1;
                 board.drawBoard();
+                console.log(board.state);
                 return 0;
             }
             if(side === "O" && !board.state[index]){
                 board.state[index] = -1;
                 board.drawBoard();
+                console.log(board.state);
                 return 0;
             }
             return -1;
@@ -116,7 +123,7 @@ const gameSpace = (() =>{
             
             const msgDiv = document.createElement("div");
             msgDiv.classList.add("msg");
-            msgDiv.innerHTML = `${winningSide} victory!`;
+            msgDiv.innerText = `${winningSide} victory!`;
             msgDiv.style.position = "fixed";
             msgDiv.style.top = "50%";
             msgDiv.style.left = "50%";
@@ -137,18 +144,23 @@ const gameSpace = (() =>{
             });
         }
 
-        const _die = (winningSide) => {
+        const _die = (winningSide = undefined) => {
+            let _board = document.querySelectorAll(".field");
             _board.forEach(e => {
                 let copy = e.cloneNode(true);
                 e.parentNode.appendChild(copy);
                 e.remove();
             });
-            _displayMessage(winningSide);
+            if(winningSide){
+                _displayMessage(winningSide);
+            }
+
         }
 
         let gameStart = (side, gameMode) => {
             let _player = player(side);
             let _enemy;
+            _board = document.querySelectorAll(".field");
             if(gameMode === "PvP"){ 
                 _enemy = player(side === "X" ? "O" : "X");
             }
@@ -163,8 +175,10 @@ const gameSpace = (() =>{
             if(side === "O"){
                 _turn = 0;
             }
+            console.log(_turn);
             _board.forEach(e => {
-                e.addEventListener("click", function mov(){
+                console.log(e);
+                e.addEventListener("click", () => {
                     if(_turn === 1){
                         if(_player.makeMove(_player.side, e.id) === 0){
                             _turn = 0;
@@ -179,9 +193,22 @@ const gameSpace = (() =>{
                 });
             })
         }
-        return {gameStart};
+
+        let retry = (side, gameMode) => {
+            board.nullify();
+            board.erase();
+            _die();
+            gameStart(side, gameMode);
+        }
+
+        return {gameStart, retry};
     })();
 
-    return {gamestart: controller.gameStart};
+    const _playButton = document.querySelector(".play");
+    _playButton.addEventListener("click", () => { controller.gameStart("X", "PvP") });
+    const _retryButton = document.querySelector(".retry");
+    _retryButton.addEventListener("click", () => { controller.retry("X", "PvP") } );
+
+    return {gameStart: controller.gameStart, erase: board._erase};
 })();
 
